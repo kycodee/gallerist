@@ -14,9 +14,25 @@ function AuctionItem({ art, setSale }) {
     axios
       .put(`/db/art/${event.target.value}`, {
         isForSale: false,
+        price: 0,
       })
       .then(() => setSale(false))
       .catch((err) => console.error('Could not Put update on artwork: ', err));
+  }
+
+  function payOwner() {
+    axios
+      .put(`/db/giveMoney/${art.userGallery.name}`, {
+        price: art.price,
+      })
+      .then(() => {
+        axios
+          .put('/db/deductWallet/', {
+            price: art.price,
+          })
+          .catch((err) => console.error('Could not deduct from wallet: '.err));
+      })
+      .catch((err) => console.error('Could not pay owner: ', err));
   }
 
   return (
@@ -31,8 +47,15 @@ function AuctionItem({ art, setSale }) {
         <Card.Body>
           <Card.Title>{art.title}</Card.Title>
           <Card.Text>{art.artist}</Card.Text>
-          <Button onClick={bidClick} value={art.imageId} variant="outline-dark">
-            Buy
+          <Button
+            onClick={(e) => {
+              bidClick(e);
+              payOwner();
+            }}
+            value={art.imageId}
+            variant="outline-dark"
+          >
+            {`Buy from ${art.userGallery.name} for $${art.price}`}
           </Button>
         </Card.Body>
       </Card>

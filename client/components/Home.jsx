@@ -22,7 +22,7 @@ function Home() {
         />
         <Card.Body>
           <Card.Title
-            className="card-title"
+            className="home-title"
           >
             <strong>GLLRST</strong>
           </Card.Title>

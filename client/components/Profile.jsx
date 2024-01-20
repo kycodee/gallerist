@@ -8,14 +8,29 @@ import Col from 'react-bootstrap/Col';
 import ListGroup from 'react-bootstrap/ListGroup';
 import Button from 'react-bootstrap/Button';
 import Accordion from 'react-bootstrap/Accordion';
+import Modal from 'react-bootstrap/Modal';
+import Form from 'react-bootstrap/Form';
 
 function Profile() {
   // Initialize three main parts of profile page
   const [name, setName] = useState('');
   const [friends, setFriends] = useState([]);
+  const [wallet, setWallet] = useState(0); // adding for possible price feature
+
   const [gallery, setGallery] = useState([]);
 
-  const [reload, setReload] = useState(false);
+  // const [reload, setReload] = useState(false);
+
+  // Price setting modal
+  const [show, setShow] = useState(false);
+  const closePriceModal = () => setShow(false);
+  const showPriceModal = () => setShow(true);
+
+  // Delete modal
+  const [isVisible, setVis] = useState(false);
+  const [message, setMessage] = useState('');
+  const closeDelModal = () => setVis(false);
+  const showDelModal = () => setVis(true);
 
   // Get request to return User profile, sets name and friends State
   function getProfile() {
@@ -24,6 +39,7 @@ function Profile() {
       .then(({ data }) => {
         setName(data.name);
         setFriends(data.friends);
+        setWallet(data.wallet);
       })
       .catch((err) => console.error('Could not GET user profile: ', err));
   }
@@ -45,29 +61,48 @@ function Profile() {
   }, []);
 
   // Re-render component when User document changes, i.e. friend deleted
-  useEffect(() => {
-    if (reload) {
-      getProfile();
-    }
-  }, [reload]);
+  // useEffect(() => {
+  //   if (reload) {
+  //     getProfile();
+  //     setReload(true);
+  //   }
+  // }, [reload]);
 
-  // const [price, setPrice] = useState(0);
+  // State for possible price setting feature
+  const [price, setPrice] = useState(0);
+  const [imageId, setImageId] = useState(0);
 
-  // Updates art object by changing isForSale field to true
-  function putSale(event) {
-    // setPrice(prompt('Set a price:'));
+  function putSale(id) {
     axios
-      .put(`/db/art/${event.target.value}`, {
+      .put(`/db/art/${id}`, {
         isForSale: true,
+        price,
       })
       .then(() => getUserGallery())
       .catch((err) => console.error('Could not Put update on artwork: ', err));
   }
 
+  function handleChange(event) {
+    setPrice(event.target.value);
+  }
+
+  // Way to putSale with only button, no pricing
+  // Updates art object by changing isForSale field to true
+  // function putSale(event) {
+  //   axios
+  //     .put(`/db/art/${event.target.value}`, {
+  //       isForSale: true,
+  //       price,
+  //     })
+  //     .then(() => getUserGallery())
+  //     .catch((err) => console.error('Could not Put update on artwork: ', err));
+  // }
+
   function unlistSale(event) {
     axios
       .put(`/db/art/${event.target.value}`, {
         isForSale: false,
+        price: 0,
       })
       .then(() => getUserGallery())
       .catch((err) => console.error('Could not Put update on artwork: ', err));
@@ -77,16 +112,25 @@ function Profile() {
   function unFriend(event) {
     axios
       .put('/db/unfriend/', { friend: event.target.value })
-      .then(() => setReload(true))
+      .then(() => getProfile())
       .catch((err) => console.error('Could not unfriend: ', err));
   }
 
   // Deletes art object, then updates gallery State by invoking getUserGallery
   function deleteArt(event) {
+    const brokerArray = ['Artie McBuyer', 'Pinta Purchassini', 'Monet Baggs', 'Andrew Draw', 'Picasso Paintman', 'Guy Frames', 'Vanessa Van Canvas'];
+    const randomPrice = Math.floor(Math.random() * 50);
+    setMessage(`${brokerArray[Math.floor(Math.random() * brokerArray.length)]} bought your artwork for $${randomPrice}.`);
+    showDelModal();
     axios
       .delete(`/db/art/${event.target.value}`)
       .then(() => getUserGallery())
       .catch((err) => console.error('Could not Delete art: ', err));
+    axios.put(`/db/giveMoney/${name}`, {
+      price: randomPrice,
+    })
+      .then(() => getProfile())
+      .catch((err) => console.error('Could not get paid by Artie McBuyer: ', err));
   }
 
   // Iterate over friends array, could be improved by linking to friend's gallery perhaps
@@ -150,7 +194,11 @@ function Profile() {
                           variant="outline-success"
                           type="button"
                           value={art.imageId}
-                          onClick={putSale}
+                          // onClick={putSale}
+                          onClick={(e) => {
+                            setImageId(e.target.value);
+                            showPriceModal();
+                          }}
                         >
                           Sell
                         </Button>
@@ -227,15 +275,19 @@ function Profile() {
   return (
     <Container>
       <Row>
-        <Col sm="5">
+        <Col sm="4">
           <h2>
             <strong>{name}</strong>
           </h2>
           <br />
         </Col>
-        <Col sm="7">
+        <Col sm="6">
           <h3>Friends:</h3>
           {friendsDiv}
+        </Col>
+        <Col sm="2">
+          <h4>Wallet:</h4>
+          {wallet ? `$${wallet}` : '$0.00'}
         </Col>
       </Row>
       <Row>
@@ -244,6 +296,54 @@ function Profile() {
           {artDiv}
         </Container>
       </Row>
+
+      <Modal
+        show={isVisible}
+        onHide={closeDelModal}
+      >
+        <Modal.Header>
+          <Modal.Title>Congratulations</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          {message}
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="secondary"
+            type="submit"
+            onClick={() => closeDelModal()}
+          >
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
+
+      <Modal
+        show={show}
+        onHide={closePriceModal}
+      >
+        <Modal.Header>
+          <Modal.Title>Set Price</Modal.Title>
+        </Modal.Header>
+        <Modal.Body>
+          <Form.Group>
+            <Form.Label>Price: </Form.Label>
+            <Form.Control type="number" onChange={handleChange} value={price} placeholder="0" />
+          </Form.Group>
+        </Modal.Body>
+        <Modal.Footer>
+          <Button
+            variant="primary"
+            type="submit"
+            onClick={() => {
+              putSale(imageId);
+              closePriceModal();
+            }}
+          >
+            List for Sale
+          </Button>
+        </Modal.Footer>
+      </Modal>
     </Container>
   );
 }

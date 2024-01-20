@@ -9,17 +9,21 @@ function SearchItem({ image, idSearch }) {
     <Col
       key={image.id}
     >
-      <Image
-        style={{ width: '300px', height: 'auto' }}
-        src={image.baseimageurl}
-        id={image.id}
-        alt={image.alttext}
-      />
+      <a href={image.baseimageurl}>
+        <Image
+          style={{ width: '300px', height: 'auto' }}
+          src={image.baseimageurl}
+          id={image.id}
+          alt={image.alttext}
+        />
+      </a>
       <br />
       <Button
         variant="outline"
         type="submit"
-        onClick={() => idSearch(image.id)}
+        onClick={() => {
+          idSearch(image.id);
+        }}
         style={{ paddingBottom: '20px' }}
       >
         ❤️

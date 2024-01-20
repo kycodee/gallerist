@@ -1,31 +1,38 @@
 @import "~bootstrap/scss/bootstrap";
 
+// variables
+$shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+
 .sticky-top {
   background-color: black;
 }
 
-.card-title {
+.home-title {
   font-weight: bolder;
   font-size: 400%;
 }
 
 .gallery-image {
-  box-shadow: 0 4px 8px 0 rgba(0, 0, 0, 0.2), 0 6px 20px 0 rgba(0, 0, 0, 0.19);
+  box-shadow: $shadow;
 }
 
 .gallery-title {
   font-weight: bolder;
 }
 
-body {
-  .home {
-    background-image:
-    linear-gradient(to bottom, rgba(160, 160, 160, 0.52), rgba(249, 246, 246, 0.73)),
-    url('https://www.researchgate.net/profile/Dominik-Markowski-2/publication/301670799/figure/fig1/AS:668987461476355@1536510448133/Warhol-Andy-Colored-Mona-Lisa.jpg');
-    background-size: cover;
-    color: white;
-    padding: 100px;
-  }
+
+.home {
+  background-image:
+  linear-gradient(to bottom, rgba(160, 160, 160, 0.52), rgba(249, 246, 246, 0.73)),
+  url('https://www.researchgate.net/profile/Dominik-Markowski-2/publication/301670799/figure/fig1/AS:668987461476355@1536510448133/Warhol-Andy-Colored-Mona-Lisa.jpg');
+  background-size: cover;
+  color: white;
+  padding: 150px;
 }
+
+.home-card {
+  box-shadow: $shadow;
+}
+
 
 

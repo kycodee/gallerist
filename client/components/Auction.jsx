@@ -8,9 +8,17 @@ import AuctionItem from './AuctionItem';
 
 function Auction() {
   const [auctionArray, setAuctionArray] = useState([]);
+  const [wallet, setWallet] = useState(0);
 
   const [forSale, setSale] = useState(true);
 
+  function getWallet() {
+    axios.get('/db/user/')
+      .then(({ data }) => {
+        setWallet(data.wallet);
+      })
+      .catch((err) => console.error('Could not GET wallet amount: ', err));
+  }
   function getAuction() {
     return axios
       .get('/db/auction/')
@@ -22,6 +30,7 @@ function Auction() {
 
   useEffect(() => {
     getAuction();
+    getWallet();
     const intervalId = setInterval(() => {
       axios
         .get('/db/auction/')
@@ -38,6 +47,7 @@ function Auction() {
   useEffect(() => {
     if (!forSale) {
       getAuction();
+      getWallet();
       setSale(true);
     }
   }, [forSale]);
@@ -48,6 +58,9 @@ function Auction() {
 
   return (
     <Container>
+      <Row>
+        <h3>{`Your Wallet: $${wallet}`}</h3>
+      </Row>
       <Row>{auctionItems}</Row>
     </Container>
   );

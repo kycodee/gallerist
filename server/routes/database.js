@@ -31,7 +31,6 @@ dbRouter.get('/db/users/', (req, res) => {
 
 // USERS Routes: Update via a Put request
 // '/db/user/:id'
-// TODO: find out what updObj looks like to deal with 200 vs 404 status
 dbRouter.put('/db/user/:id', (req, res) => {
   const { id } = req.params;
   const fieldsToUpdate = req.body; // gallery: {imageid: artObj}
@@ -43,6 +42,34 @@ dbRouter.put('/db/user/:id', (req, res) => {
     })
     .catch((err) => {
       console.error('Failed to update by user id: ', err);
+      res.sendStatus(500);
+    });
+});
+
+// For possible pricing feature, to pay owner of art and increment wallet
+dbRouter.put('/db/giveMoney/:name', (req, res) => {
+  const { name } = req.params;
+  const { price } = req.body;
+  User.findOneAndUpdate({ name }, { $inc: { wallet: price } }, { new: true })
+    .then((updObj) => {
+      res.sendStatus(200);
+    })
+    .catch((err) => {
+      console.error('Failed to pay wallet of user: ', err);
+      res.sendStatus(500);
+    });
+});
+
+// For possible pricing feature, to deduct money from wallet upon purchase
+dbRouter.put('/db/deductWallet/', (req, res) => {
+  const { _id } = req.user.doc;
+  const { price } = req.body;
+  User.findByIdAndUpdate(_id, { $inc: { wallet: -price } }, { new: true })
+    .then((updObj) => {
+      res.sendStatus(200);
+    })
+    .catch((err) => {
+      console.error('Failed to pay wallet of user: ', err);
       res.sendStatus(500);
     });
 });
@@ -103,6 +130,23 @@ dbRouter.get('/db/art/:user', (req, res) => {
     })
     .catch((err) => {
       console.error(`Failed to find ${user}'s artwork: `, err);
+      res.sendStatus(500);
+    });
+});
+
+// GET all art based on :culture filter, returns all art documents with a given culture
+dbRouter.get('/db/culture/:culture', (req, res) => {
+  const { culture } = req.params;
+  Art.find({ culture })
+    .then((cultureArt) => {
+      if (cultureArt.length) {
+        res.status(200).send(cultureArt);
+      } else {
+        res.sendStatus(404);
+      }
+    })
+    .catch((err) => {
+      console.error(`Failed to find ${culture} artwork: `, err);
       res.sendStatus(500);
     });
 });
