@@ -14,7 +14,7 @@ const UserSchema = new Schema({
   username: String,
   googleId: String,
   name: String,
-  gallery: Array,
+  // gallery: Array,
   friends: Array,
   wallet: Number,
 });
@@ -32,7 +32,10 @@ const ArtSchema = new Schema({
   artist: String,
   date: String,
   culture: String,
-  imageId: Number,
+  imageId: {
+    type: Number,
+    unique: true,
+  },
   url: String,
   imageUrl: String,
   userGallery: Object,

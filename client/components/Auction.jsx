@@ -1,6 +1,9 @@
 import React, { useState, useEffect } from 'react';
 import axios from 'axios';
 
+import Container from 'react-bootstrap/Container';
+import Row from 'react-bootstrap/Row';
+
 import AuctionItem from './AuctionItem';
 
 function Auction() {
@@ -19,6 +22,17 @@ function Auction() {
 
   useEffect(() => {
     getAuction();
+    const intervalId = setInterval(() => {
+      axios
+        .get('/db/auction/')
+        .then(({ data }) => {
+          if (auctionArray.length !== data.length) {
+            setAuctionArray(data);
+          }
+        })
+        .catch((err) => console.error('Could not GET auction items: ', err));
+    }, 2000);
+    return () => clearInterval(intervalId);
   }, []);
 
   useEffect(() => {
@@ -32,7 +46,11 @@ function Auction() {
     <AuctionItem key={art.imageId} art={art} setSale={setSale} />
   ));
 
-  return <span>{auctionItems}</span>;
+  return (
+    <Container>
+      <Row>{auctionItems}</Row>
+    </Container>
+  );
 }
 
 export default Auction;

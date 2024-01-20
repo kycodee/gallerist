@@ -1,6 +1,12 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import axios from 'axios';
-// import { Link } from 'react-router-dom';
+
+// react bootstrap components
+import Button from 'react-bootstrap/Button';
+import Container from 'react-bootstrap/Container';
+import Row from 'react-bootstrap/Row';
+import Modal from 'react-bootstrap/Modal';
+
 import SearchItem from './SearchItem';
 
 // '/huam/object/:imageid' --For detailed object about image
@@ -10,6 +16,11 @@ function Search() {
   const [search, setSearch] = useState('');
   // state images array
   const [images, setImages] = useState([]);
+
+  // Modal state for 404 errors
+  const [show, setShow] = useState(false);
+  const handleClose = () => setShow(false);
+  const handleShow = () => setShow(true);
 
   // axios post request to user's gallery
   function postToGallery(artObj) {
@@ -34,10 +45,11 @@ function Search() {
       });
   }
 
+  // search by keyword
   function keywordSearch(term) {
     axios(`/huam/image/${term}`)
       .then((response) => {
-        // console.log(response.status);
+        // console.log(response.data);
         setImages(response.data);
       })
       .catch((err) => console.error(err));
@@ -50,7 +62,8 @@ function Search() {
         // console.log(data);
         if (data[0].images.length === 0) {
           // console.log(': (');
-          return window.alert('Image backlog not found :(');
+          // alert('Sorry this piece is no longer available');
+          handleShow();
         }
         return postToGallery(data[0]);
       })
@@ -61,24 +74,39 @@ function Search() {
     idSearch(id);
   });
 
+  useEffect(() => {
+    keywordSearch('abstract');
+  }, []);
+
   return (
-    <div>
+    <Container className="search">
       <input
         type="text"
         value={search}
+        onKeyDown={(e) => {
+          if (search.length > 0 && e.key === 'Enter') {
+            keywordSearch(search);
+            setSearch('');
+          }
+        }}
         onChange={(e) => setSearch(e.target.value)}
       />
-      <button
+      <Button
         type="button"
+        size="sm"
+        variant="outline"
         onClick={() => {
           // console.log('keyword: ', search);
-          keywordSearch(search);
+          if (search.length > 0) {
+            keywordSearch(search);
+          }
           setSearch('');
         }}
       >
-        Search by Keyword
-      </button>
-      <ul style={{ listStyleType: 'none' }}>
+        🔍
+      </Button>
+      <br />
+      <Row align="center" gap={3} style={{ listStyleType: 'none', paddingTop: '20px' }}>
         {
           images.map((image) => (
             <SearchItem
@@ -88,19 +116,18 @@ function Search() {
             />
           ))
         }
-      </ul>
-    </div>
+      </Row>
+
+      <Modal show={show} onHide={handleClose}>
+        <Modal.Body>Sorry, this piece is no longer available.</Modal.Body>
+        <Modal.Footer>
+          <Button variant="secondary" onClick={handleClose}>
+            Close
+          </Button>
+        </Modal.Footer>
+      </Modal>
+    </Container>
   );
 }
-
-{/* <button
-type="button"
-onClick={() => {
-  // console.log('imageid: ', search);
-  idSearch(search);
-}}
->
-Search by imageid
-</button> */}
 
 export default Search;

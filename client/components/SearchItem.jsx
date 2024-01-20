@@ -1,24 +1,30 @@
 import React from 'react';
 import PropTypes from 'prop-types';
+import Button from 'react-bootstrap/Button';
+import Image from 'react-bootstrap/Image';
+import Col from 'react-bootstrap/Col';
 
 function SearchItem({ image, idSearch }) {
   return (
-    <li
+    <Col
       key={image.id}
     >
-      <img
-        style={{ width: '250px', height: 'auto' }}
+      <Image
+        style={{ width: '300px', height: 'auto' }}
         src={image.baseimageurl}
         id={image.id}
         alt={image.alttext}
       />
-      <button
+      <br />
+      <Button
+        variant="outline"
         type="submit"
         onClick={() => idSearch(image.id)}
+        style={{ paddingBottom: '20px' }}
       >
         ❤️
-      </button>
-    </li>
+      </Button>
+    </Col>
   );
 }
 

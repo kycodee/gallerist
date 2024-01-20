@@ -8,7 +8,7 @@ const { APIKEY } = process.env;
 
 // Initial api request for images results with a user-supplied keyword
 const getArtImages = (keyword) => axios(
-  `https://api.harvardartmuseums.org/image?q=${keyword}&apikey=${APIKEY}`,
+  `https://api.harvardartmuseums.org/image?q=${keyword}&apikey=${APIKEY}&sort=random`,
 );
   // .then((data) => data.records)
   // .catch((err) => console.error(err));

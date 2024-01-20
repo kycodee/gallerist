@@ -1,5 +1,11 @@
 import React from 'react';
 import axios from 'axios';
+import { Link } from 'react-router-dom';
+import Container from 'react-bootstrap/Container';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
+import Image from 'react-bootstrap/Image';
+import Button from 'react-bootstrap/Button';
 
 function GalleryListItem({ image }) {
   // add a friend to users friend array
@@ -11,37 +17,38 @@ function GalleryListItem({ image }) {
   }
 
   return (
-    <div>
-      <img
-        style={{ width: '250px', height: 'auto' }}
-        src={image.imageUrl}
-        id={image.imageId}
-        alt={image.title}
-      />
-      <h1>
-        Title:
-        {' '}
-        {image.title}
-      </h1>
-      <div>
-        Artist:
-        {' '}
-        {image.artist}
-      </div>
-      <div>
-        Date:
-        {' '}
-        {image.date}
-      </div>
-      <button value={image.userGallery.name} type="button" onClick={addFriend}>
-        Add Friend
-      </button>
-      <div>
-        User:
-        {' '}
-        {image.userGallery.name}
-      </div>
-    </div>
+    <Container>
+      <Row>
+        <Col>
+          <div>
+            <Image
+              className="gallery-image"
+              style={{ width: '250px', height: 'auto' }}
+              src={image.imageUrl}
+              id={image.imageId}
+              alt={image.title}
+            />
+            <br />
+            <div className="gallery-title">
+              {' '}
+              {image.title}
+            </div>
+            <div>
+              Owner:
+              {' '}
+              {image.userGallery.name}
+            </div>
+            <Button variant="secondary" value={image.userGallery.name} onClick={addFriend}>
+              Add Friend
+            </Button>
+          </div>
+          <Link to={`/home/art/${image.imageId}`}>Click here for more details...</Link>
+          <br />
+        </Col>
+      </Row>
+
+    </Container>
+
   );
 }
 

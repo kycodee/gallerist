@@ -37,7 +37,7 @@ dbRouter.put('/db/user/:id', (req, res) => {
   const fieldsToUpdate = req.body; // gallery: {imageid: artObj}
   User.findByIdAndUpdate(id, fieldsToUpdate)
     .then((updObj) => {
-      console.log('Put data (updObj) by user ID: ', updObj);
+      // console.log('Put data (updObj) by user ID: ', updObj);
       res.sendStatus(200);
       // res.sendStatus(404); //when we figure out what updObj looks like
     })
@@ -55,6 +55,23 @@ dbRouter.get('/db/art/', (req, res) => {
     })
     .catch((err) => {
       console.error('Failed to find Art: ', err);
+      res.sendStatus(500);
+    });
+});
+
+// GETs specific Artwork based on imageId sent
+dbRouter.get('/db/artwork/:imageId', (req, res) => {
+  const { imageId } = req.params;
+  Art.find({ imageId })
+    .then((artwork) => {
+      if (artwork) {
+        res.status(200).send(artwork);
+      } else {
+        res.sendStatus(404);
+      }
+    })
+    .catch((err) => {
+      console.error('Failed to find artwork by imageId: ', err);
       res.sendStatus(500);
     });
 });
@@ -78,7 +95,6 @@ dbRouter.get('/db/art/:user', (req, res) => {
   const { user } = req.params;
   Art.find({ 'userGallery.name': user })
     .then((userArt) => {
-      // console.log('user art: ', userArt);
       if (userArt.length) {
         res.status(200).send(userArt);
       } else {
@@ -92,7 +108,6 @@ dbRouter.get('/db/art/:user', (req, res) => {
 });
 
 dbRouter.put('/db/art/:imageId', (req, res) => {
-  console.log(req.user.doc)
   const { imageId } = req.params;
   const { googleId, name } = req.user.doc;
   const fieldsToUpdate = req.body;
@@ -109,7 +124,7 @@ dbRouter.put('/db/art/:imageId', (req, res) => {
       }
     })
     .catch((err) => {
-      console.log('Failed to Update art by imageId: ', err);
+      console.error('Failed to Update art by imageId: ', err);
     });
 });
 
@@ -129,22 +144,49 @@ dbRouter.delete('/db/art/:imageId', (req, res) => {
     });
 });
 
-//PUT request to update User's friend array
+// PUT request to update User's friend array
 dbRouter.put('/db/friends/', (req, res) => {
-  console.log(req.body)
   const { friend } = req.body; // req.body should be { friend: `friend's name` }
   const { googleId } = req.user.doc;
-  User.findOneAndUpdate({ googleId }, { $push: { friends: friend } })
-    .then((updObj) => {
-      console.log('updObj for adding friend: ', updObj);
-      res.sendStatus(200);
-      // if (updObj) {
-      // } else {
-      //   res.sendStatus(404);
-      // }
+  User.findOne({ googleId })
+    // , { $push: { friends: friend } })
+    .then((user) => {
+      if (user.name !== friend && !user.friends.includes(friend)) {
+        User.findByIdAndUpdate(
+          user._id,
+          { $push: { friends: friend } },
+          { new: true },
+        ).then((updObj) => {
+          res.sendStatus(200);
+        });
+      } else {
+        res.sendStatus(204);
+      }
     })
     .catch((err) => {
-      console.log('Failed to update user friend array: ', err);
+      console.error('Failed to update user friend array: ', err);
+      res.sendStatus(500);
+    });
+});
+
+// PUT request to remove friend from friends' list
+dbRouter.put('/db/unfriend/', (req, res) => {
+  const { friend } = req.body;
+  const { googleId } = req.user.doc;
+  User.findOne({ googleId })
+    .then((user) => {
+      const idx = user.friends.indexOf(friend);
+      user.friends.splice(idx, 1);
+      User.findOneAndUpdate(
+        user._id,
+        { friends: user.friends },
+        { new: true },
+      ).then(() => {
+        res.sendStatus(200);
+      });
+    })
+    .catch((err) => {
+      console.error('Failed to Put update to friend list: ', err);
       res.sendStatus(500);
     });
 });
@@ -165,15 +207,25 @@ dbRouter.get('/db/auction/', (req, res) => {
 // .deleteOne() via a Delete request
 // POST '/db/art/ ==> req.body will contain fields corresponding to Art Schema
 dbRouter.post('/db/art', (req, res) => {
+  // destructure relevant user info from request
+  const { name, googleId } = req.user.doc;
   const { art } = req.body;
+
+  // Spread contents of art object from req.body into document creation object,
+  // along with userGallery field to associate with user that is curating this artwork
+  Art.create({ ...art, userGallery: { name, googleId } })
+    .then(() => {
+      // send 201 status in response
+      res.sendStatus(201);
+    })
+    .catch((err) => {
+      console.error('Failed to create Art document: ', err);
+      res.sendStatus(500);
+    });
   /**
    * All of these fields are available in art object returned from GET: 'huam/object/:id'
   title: String,
   artist: String,
-  artistDate: String,
-  altText: String,
-  description: String,
-  century: String,
   date: Number,
   culture: String,
   imageId: Number,
@@ -181,34 +233,6 @@ dbRouter.post('/db/art', (req, res) => {
   imageUrl: String,
   isForSale: False, //initialize to false
   */
-  Art.create(art)
-    .then((createObj) => {
-      console.log('Post data (createObj) to Art: ', createObj);
-
-      // destructure relevant user info from request
-      const { name, googleId } = req.user.doc;
-      // find art object that was just added to db and update with user that just sent request
-      Art.findByIdAndUpdate(createObj._id, { userGallery: { name, googleId } })
-        .then((updObj) => {
-          // console.log('Just created artObj updObj: ', updObj);
-
-          // find user record and push art object to gallery array
-          User.findOneAndUpdate({ googleId }, { $push: { gallery: art } })
-            .then((userUpdObj) => {
-              // console.log('User update Obj: ', userUpdObj);
-
-              // finally send 201 status in response if following db queries were successful
-              res.sendStatus(201);
-            })
-            .catch((err) => console.error('post /db/art user update: ', err));
-        })
-        .catch((err) => console.error('post /db/art Art update: ', err));
-      // res.sendStatus(404); //when we figure out what updObj looks like
-    })
-    .catch((err) => {
-      console.error('Failed to create Art document: ', err);
-      res.sendStatus(500);
-    });
 });
 
 module.exports = { dbRouter };

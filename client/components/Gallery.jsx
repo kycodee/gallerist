@@ -1,5 +1,9 @@
-import React, { useState, useEffect, useCallback } from 'react';
+import React, { useState, useEffect } from 'react';
 import axios from 'axios';
+import Container from 'react-bootstrap/Container';
+import Row from 'react-bootstrap/Row';
+import Col from 'react-bootstrap/Col';
+import Form from 'react-bootstrap/Form';
 
 import GalleryListItem from './GalleryListItem';
 
@@ -27,16 +31,13 @@ function Gallery() {
   };
   // use an axios request to get a list of filtered images from art db based on friends or some key
   // pass in a word to filter by, possibly a friend's username
-  const getFilteredImages = useCallback(
-    (filter) => {
-      axios(`/db/art/${filter}`)
-        .then((art) => {
-          setImages(art.data);
-        })
-        .catch((err) => console.log('get filtered images failed', err));
-    },
-    [images],
-  );
+  const getFilteredImages = (filter) => {
+    axios(`/db/art/${filter}`)
+      .then((art) => {
+        setImages(art.data);
+      })
+      .catch((err) => console.log('get filtered images failed', err));
+  };
   // put the initial db request into useEffect to auto render images when you get to page
   useEffect(() => {
     get25RecentImages();
@@ -44,19 +45,17 @@ function Gallery() {
   }, []);
   // added temporary hardcoded option for Artie McBuyer for dropdown list to test
   return (
-    <div>
-      <h2>Gallery</h2>
-      <div className="users" style={{ position: 'absolute', right: 0 }}>
-        <h3 className="section-header text-center">Users</h3>
-        <select className="users" onChange={(e) => getFilteredImages(e.target.value)}>
-          <option value="all" key="54321">All</option>
-          <option
-            value="Artie McBuyer"
-            key="12345"
-          >
-            Artie McBuyer
-          </option>
-          {
+    <Container>
+      <Row>
+        <Col md={10}>
+          <h1><strong>Gallery</strong></h1>
+        </Col>
+        <Col md="auto">
+          <div className="users">
+            <h3 className="section-header text-center">Users</h3>
+            <Form.Select onChange={(e) => getFilteredImages(e.target.value)}>
+              <option value="" key="54321">All</option>
+              {
           usersArray.map((user, i) => (
             <option
               value={user.name}
@@ -66,17 +65,22 @@ function Gallery() {
             </option>
           ))
         }
-        </select>
-      </div>
-      <ul>
+            </Form.Select>
+          </div>
+        </Col>
+      </Row>
+      <Row>
         {images.map((image) => (
-          <GalleryListItem
-            image={image}
-            key={`${image.imageId}-${image.date}`}
-          />
+          <Col>
+            <GalleryListItem
+              image={image}
+              key={`${image.imageId}-${image.date}`}
+            />
+          </Col>
         ))}
-      </ul>
-    </div>
+      </Row>
+    </Container>
+
   );
 }
 
